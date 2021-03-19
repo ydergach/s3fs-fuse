@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3fs
+  annotations:
+spec:
+  selector:
+    matchLabels:
+      app: s3fs-fuse
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: s3fs-fuse
+    spec:
+      serviceAccountName: default
+      imagePullSecrets: 
+        - name: secret_registry
+      terminationGracePeriodSeconds: 20
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: s3fs-fuse
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - name: s3fs-fuse
+        image: local_registry/s3fs-fuse
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_ADMIN
+        resources:
+          limits:
+            cpu: 300m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        env:
+        - name: S3_BUCKET
+          value: 
+        - name: S3_ENDPOINT
+          value: 
+        - name: MNT_POINT
+          value: /data
+        - name: S3_ACCESS_KEY_ID
+          value: 
+        - name: S3_SECRET_ACCESS_KEY
+          value: 
